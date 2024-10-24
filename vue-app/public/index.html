@@ -1,0 +1,316 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>After School Activities</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/tailwindcss/2.2.19/tailwind.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/vue/2.7.14/vue.js"></script>
+</head>
+<body class="bg-gray-50">
+    <div id="app">
+        <nav class="bg-blue-600 p-4 text-white mb-8">
+            <div class="container mx-auto flex justify-between items-center">
+                <h1 class="text-xl font-bold">After School Hub</h1>
+                <div>
+                    <span class="mr-4">Cart Items: {{cartItems.length}}</span>
+                    <button 
+                        @click="showCart = !showCart"
+                        class="bg-white text-blue-600 px-4 py-2 rounded">
+                        <i class="fas fa-shopping-cart mr-2"></i>View Cart
+                    </button>
+                </div>
+            </div>
+        </nav>
+
+        <main class="container mx-auto px-4">
+            <div class="mb-8 bg-white p-4 rounded-lg shadow">
+                <h2 class="text-lg font-bold mb-4">Sort Lessons</h2>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-gray-700 text-sm font-bold mb-2">
+                            Sort by:
+                        </label>
+                        <select 
+                            v-model="sortAttribute"
+                            class="border rounded p-2 w-full">
+                            <option value="subject">Subject</option>
+                            <option value="location">Location</option>
+                            <option value="price">Price</option>
+                            <option value="spaces">Available Spaces</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-gray-700 text-sm font-bold mb-2">
+                            Order:
+                        </label>
+                        <div class="flex gap-4">
+                            <label class="flex items-center">
+                                <input 
+                                    type="radio" 
+                                    v-model="sortOrder" 
+                                    value="asc"
+                                    class="mr-2">
+                                Ascending
+                                <i class="fas fa-arrow-up ml-1"></i>
+                            </label>
+                            <label class="flex items-center">
+                                <input 
+                                    type="radio" 
+                                    v-model="sortOrder" 
+                                    value="desc"
+                                    class="mr-2">
+                                Descending
+                                <i class="fas fa-arrow-down ml-1"></i>
+                            </label>
+                        </div>
+                    </div>
+                </div>
+                <div class="mt-4">
+                    <p class="text-sm text-gray-600">
+                        Currently sorting by: 
+                        <span class="font-bold">{{sortAttribute}}</span> 
+                        in 
+                        <span class="font-bold">{{sortOrder === 'asc' ? 'ascending' : 'descending'}}</span> 
+                        order
+                    </p>
+                </div>
+            </div>
+
+            <!-- Lessons-->
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                <div 
+                    v-for="lesson in sortedLessons"
+                    class="bg-white rounded-lg shadow-md overflow-hidden">
+                    <div class="p-4">
+                        <div class="flex items-center justify-between mb-4">
+                            <i :class="lesson.icon" class="text-3xl text-blue-600"></i>
+                            <span 
+                                :class="['px-3 py-1 rounded-full text-sm', 
+                                    lesson.spaces > 3 ? 'bg-green-100 text-green-800' : 
+                                    lesson.spaces > 0 ? 'bg-yellow-100 text-yellow-800' : 
+                                    'bg-red-100 text-red-800']">
+                                {{lesson.spaces}} spaces left
+                            </span>
+                        </div>
+                        <h3 class="text-lg font-bold mb-2">{{lesson.subject}}</h3>
+                        <div class="space-y-2 text-gray-600">
+                            <p>
+                                <i class="fas fa-map-marker-alt mr-2"></i>
+                                {{lesson.location}}
+                            </p>
+                            <p>
+                                <i class="fas fa-clock mr-2"></i>
+                                {{lesson.time}}
+                            </p>
+                            <p>
+                                <i class="fas fa-dollar-sign mr-2"></i>
+                                {{lesson.price}}
+                            </p>
+                        </div>
+                        <button 
+                            @click="addToCart(lesson)"
+                            :disabled="lesson.spaces === 0"
+                            class="mt-4 w-full bg-blue-600 text-white px-4 py-2 rounded disabled:bg-gray-400 disabled:cursor-not-allowed">
+                            {{lesson.spaces === 0 ? 'Sold Out' : 'Add to Cart'}}
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <div v-if="showCart" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center">
+                <div class="bg-white p-6 rounded-lg max-w-2xl w-full mx-4">
+                    <div class="flex justify-between items-center mb-4">
+                        <h2 class="text-xl font-bold">Shopping Cart</h2>
+                        <button 
+                            @click="showCart = false"
+                            class="text-gray-600 hover:text-gray-800">&times;</button>
+                    </div>
+                    <div v-if="cartItems.length === 0" class="text-center py-4">
+                        Your cart is empty
+                    </div>
+                    <div v-else>
+                        <div 
+                            v-for="item in cartItems"
+                            class="border-b py-4 flex justify-between items-center">
+                            <div>
+                                <h3 class="font-bold">{{item.subject}}</h3>
+                                <p class="text-gray-600">${{item.price}}</p>
+                            </div>
+                            <button 
+                                @click="removeFromCart(item)"
+                                class="text-red-600 hover:text-red-800">
+                                Remove
+                            </button>
+                        </div>
+                        <div class="mt-4 flex justify-between items-center">
+                            <div class="text-xl font-bold">
+                                Total: ${{cartTotal}}
+                            </div>
+                            <button 
+                                @click="checkout"
+                                class="bg-green-600 text-white px-6 py-2 rounded hover:bg-green-700">
+                                Checkout
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script>
+        new Vue({
+            el: '#app',
+            data: {
+                selectedSubject: '',
+                sortAttribute: 'subject',
+                sortOrder: 'asc',
+                sortBy: 'price-asc',
+                showCart: false,
+                cartItems: [],
+                lessons: [
+                    {
+                        id: 1,
+                        subject: "Advanced Mathematics",
+                        location: "Room 101, Main Building",
+                        price: 45,
+                        spaces: 5,
+                        time: "Monday 4:00 PM",
+                        icon: "fas fa-square-root-alt"
+                    },
+                    {
+                        id: 2,
+                        subject: "Creative Writing",
+                        location: "Library Study Room",
+                        price: 35,
+                        spaces: 5,
+                        time: "Tuesday 3:30 PM",
+                        icon: "fas fa-pen-fancy"
+                    },
+                    {
+                        id: 3,
+                        subject: "Science Club",
+                        location: "Science Lab 2",
+                        price: 40,
+                        spaces: 5,
+                        time: "Wednesday 4:00 PM",
+                        icon: "fas fa-flask"
+                    },
+                    {
+                        id: 4,
+                        subject: "Art & Design",
+                        location: "Art Studio",
+                        price: 38,
+                        spaces: 5,
+                        time: "Thursday 3:30 PM",
+                        icon: "fas fa-palette"
+                    },
+                    {
+                        id: 5,
+                        subject: "Coding for Kids",
+                        location: "Computer Lab",
+                        price: 50,
+                        spaces: 5,
+                        time: "Friday 4:00 PM",
+                        icon: "fas fa-laptop-code"
+                    },
+                    {
+                        id: 6,
+                        subject: "Chess Club",
+                        location: "Recreation Room",
+                        price: 30,
+                        spaces: 5,
+                        time: "Monday 3:30 PM",
+                        icon: "fas fa-chess"
+                    },
+                    {
+                        id: 7,
+                        subject: "Drama Workshop",
+                        location: "Auditorium",
+                        price: 42,
+                        spaces: 5,
+                        time: "Tuesday 4:00 PM",
+                        icon: "fas fa-theater-masks"
+                    },
+                    {
+                        id: 8,
+                        subject: "Music Theory",
+                        location: "Music Room",
+                        price: 45,
+                        spaces: 5,
+                        time: "Wednesday 3:30 PM",
+                        icon: "fas fa-music"
+                    },
+                    {
+                        id: 9,
+                        subject: "Environmental Science",
+                        location: "Eco Garden",
+                        price: 37,
+                        spaces: 5,
+                        time: "Thursday 4:00 PM",
+                        icon: "fas fa-leaf"
+                    },
+                    {
+                        id: 10,
+                        subject: "Public Speaking",
+                        location: "Conference Room",
+                        price: 40,
+                        spaces: 5,
+                        time: "Friday 3:30 PM",
+                        icon: "fas fa-microphone"
+                    }
+                ]
+            },
+            computed: {
+                sortedLessons() {
+                    return [...this.lessons].sort((a, b) => {
+                        let comparison = 0;
+                        
+                        switch(this.sortAttribute) {
+                            case 'subject':
+                            case 'location':
+                                comparison = a[this.sortAttribute].localeCompare(b[this.sortAttribute]);
+                                break;
+                            
+                            case 'price':
+                            case 'spaces':
+                                comparison = a[this.sortAttribute] - b[this.sortAttribute];
+                                break;
+                        }
+                        
+                        return this.sortOrder === 'asc' ? comparison : -comparison;
+                    });
+                },
+                cartTotal() {
+                    return this.cartItems.reduce((total, item) => total + item.price, 0);
+                }
+            },
+            methods: {
+                addToCart(lesson) {
+                    if (lesson.spaces > 0) {
+                        this.cartItems.push({...lesson});
+                        lesson.spaces--;
+                    }
+                },
+                removeFromCart(item) {
+                    const index = this.cartItems.indexOf(item);
+                    if (index > -1) {
+                        this.cartItems.splice(index, 1);
+                        const originalLesson = this.lessons.find(l => l.id === item.id);
+                        if (originalLesson) {
+                            originalLesson.spaces++;
+                        }
+                    }
+                },
+                checkout() {
+                    alert('Thank you for your purchase! Total: $' + this.cartTotal);
+                    this.cartItems = [];
+                    this.showCart = false;
+                }
+            }
+        });
+    </script>
+</body>
+</html>
