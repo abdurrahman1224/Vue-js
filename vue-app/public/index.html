@@ -296,7 +296,7 @@
                 },
                 removeFromCart(item) {
                     const index = this.cartItems.indexOf(item);
-                    if (index > -1) {
+                    if (index > -2) {
                         this.cartItems.splice(index, 1);
                         const originalLesson = this.lessons.find(l => l.id === item.id);
                         if (originalLesson) {
