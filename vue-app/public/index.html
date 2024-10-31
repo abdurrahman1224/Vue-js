@@ -72,6 +72,17 @@
                         </div>
                     </div>
                     <div class="mt-4">
+                        <label class="block text-gray-700 text-sm font-bold mb-2">
+                            Search lessons:
+                        </label>
+                        <input 
+                            type="text" 
+                            v-model="searchQuery" 
+                            placeholder="Search by any term..."
+                            class="border rounded p-2 w-full"
+                        >
+                    </div>
+                    <div class="mt-4">
                         <p class="text-sm text-gray-600">
                             Currently sorting by: 
                             <span class="font-bold">{{sortAttribute}}</span> 
@@ -181,6 +192,7 @@
                 sortOrder: 'asc',
                 sortBy: 'price-asc',
                 showCart: false,
+                searchQuery: '',
                 cartItems: [],
                 lessons: [
                     {
@@ -277,7 +289,24 @@
             },
             computed: {
                 sortedLessons() {
-                    return [...this.lessons].sort((a, b) => {
+                    let filteredLessons = this.lessons;
+                    
+                    // Search functionality
+                    if (this.searchQuery) {
+                        const query = this.searchQuery.toLowerCase();
+                        filteredLessons = this.lessons.filter(lesson => {
+                            return (
+                                lesson.subject.toLowerCase().includes(query) ||
+                                lesson.location.toLowerCase().includes(query) ||
+                                lesson.price.toString().includes(query) ||
+                                lesson.spaces.toString().includes(query) ||
+                                lesson.time.toLowerCase().includes(query)
+                            );
+                        });
+                    }
+                    
+                    // Sorting functionality
+                    return filteredLessons.sort((a, b) => {
                         let comparison = 0;
                         
                         switch(this.sortAttribute) {
